@@ -1,0 +1,13 @@
+dbt-postgres:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      user: moose
+      password: moose
+      port: 5432
+      dbname: nfletl_dev
+      schema: nfl_etl
+      threads: 3
+      keepalives_idle: 0 # default 0, indicating the system default
