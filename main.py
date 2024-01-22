@@ -9,7 +9,8 @@ import psycopg2
 from sqlalchemy import create_engine
 from extract import Extract
 
-if __name__ == '__main__':
+def main():
+
     # parse command line arguments
     if len(sys.argv) != 2:
         raise Exception('Unexpected number of arguments, please review command. Terminating')
@@ -52,10 +53,10 @@ if __name__ == '__main__':
     rush_adv = [div.find('div', {'id': 'all_advanced_rushing'}) for div in soups][1]
     rec_adv = [div.find('div', {'id': 'all_advanced_receiving'}) for div in soups][1]
 
-        # Indexes for iter_divs():
-        # 0 - offense
-        # 1 - advanced offense
-        # 2 - defense
+    # Indexes for iter_divs():
+    # 0 - offense
+    # 1 - advanced offense
+    # 2 - defense
     pass_o, pass_d = ex.iter_divs([0, 2], divs_pass)
     rush_o, rush_d = ex.iter_divs([0, 2], divs_rush)
 
@@ -92,8 +93,10 @@ if __name__ == '__main__':
     rec_adv = dfs[10].set_index('Tm')
 
     # concat standings and sort
+    # standings do not automatically have ties - need to account for this for future seasons
+    # for now, manually added column for 2023
     stnd = ex.build_stnd(afc, nfc).set_index('Tm')
-    
+
     # populate Postgres
     dfs = [stnd, pass_o, pass_d, rush_o, rush_d, air_yards, accuracy, pressure, rush_adv, rec_adv]
 
@@ -128,6 +131,7 @@ if __name__ == '__main__':
             conn1.close()
             print('connection to PostgreSQL closed')
 
-
+if __name__ == "__main__":
+    main()
 
 
