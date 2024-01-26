@@ -8,8 +8,12 @@ import numpy as np
 import psycopg2
 from sqlalchemy import create_engine
 from extract import Extract
+from dotenv import load_dotenv
+import os
 
 def main():
+    # Load environment variables from .env
+    load_dotenv()
 
     # parse command line arguments
     if len(sys.argv) != 2:
@@ -107,18 +111,19 @@ def main():
         db = create_engine(conn_string)
         conn = db.connect()
         conn1 = psycopg2.connect(
-            database="nfletl_dev",
-            user='moose', 
-            password='moose', 
+            database='nfletl_dev',
+            user=os.getenv('DB_USER'), 
+            password=os.getenv('DB_PASSWORD'),
             host='127.0.0.1', 
             port= '5432',
-            # options="-c search_path=nfl_etl, public"
         )
         
         print('connection to PostgreSQL established')
         cursor = conn1.cursor()
 
         for i in range(len(dfs)):
+            cursor.execute('DROP TABLE IF EXISTS nfl_etl.{table_name} CASCADE'.format(table_name=df_names[i]))
+            conn1.commit()
             dfs[i].to_sql(name=df_names[i], con=conn, schema='nfl_etl', if_exists='replace')       # write dataframe to postgres
 
     except (Exception, psycopg2.Error) as error:
