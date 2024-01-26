@@ -48,19 +48,24 @@ def main():
     resps = Extract.response(urls)
     soups = Extract.setup_parser(resps) 
 
-    # retrieve all desired divs
+    # retrieve all desired divs, offense and defense will have corresponding divs with the same name.
+    # Indexes for decomment and iter_divs() correspond to the order of urls parsed from lines 40-43:
+    # 0 - offense
+    # 1 - advanced offense
+    # 2 - defense
+    # 3 - standings
     afc = [div.find('div', {'id': 'div_AFC'}) for div in soups][0]
     nfc = [div.find('div', {'id': 'div_NFC'}) for div in soups][0]
+    divs_team = [div.find('div', {'id': 'all_team_stats'}) for div in soups]
     divs_pass = [div.find('div', {'id': 'all_passing'}) for div in soups]
     divs_rush = [div.find('div', {'id': 'all_rushing'}) for div in soups]
     divs_pass_o_adv = [div.select('#div_air_yards, #div_accuracy, #div_pressure, #div_play_type') for div in soups]     # used selector as this is a tabbed table, as opposed to above
     rush_adv = [div.find('div', {'id': 'all_advanced_rushing'}) for div in soups][1]
     rec_adv = [div.find('div', {'id': 'all_advanced_receiving'}) for div in soups][1]
-
-    # Indexes for iter_divs():
-    # 0 - offense
-    # 1 - advanced offense
-    # 2 - defense
+    def_adv = [div.find('div', {'id': 'all_advanced_defense'}) for div in soups][2]
+    
+    team_o = ex.decomment(divs_team[0])
+    team_d = divs_team[2]                               # this div was not wrapped in comments so bypassed iter_divs(). for the above div, just went straight to decomment()
     pass_o, pass_d = ex.iter_divs([0, 2], divs_pass)
     rush_o, rush_d = ex.iter_divs([0, 2], divs_rush)
 
@@ -69,9 +74,9 @@ def main():
     air_yards =  pass_o_adv[0]
     accuracy =  pass_o_adv[1]
     pressure =  pass_o_adv[2]
-
+    
     # loop through all divs and create df to correspond
-    dfs = [afc, nfc, pass_o, pass_d, rush_o, rush_d, air_yards, accuracy, pressure, rush_adv, rec_adv]
+    dfs = [afc, nfc, team_o, team_d, pass_o, pass_d, rush_o, rush_d, air_yards, accuracy, pressure, rush_adv, rec_adv, def_adv]
 
     for i in range(len(dfs)):
         dfs[i] = pd.read_html(dfs[i].encode('utf-8'), flavor='html5lib')[0]
@@ -80,30 +85,36 @@ def main():
     # drop unwanted multilevel header and set index to team name 
     afc = dfs[0]
     nfc = dfs[1]
-    pass_o = dfs[2].drop(columns=['Rk']).set_index('Tm') 
-    pass_d = dfs[3].drop(columns=['Rk']).set_index('Tm')
-    rush_o = dfs[4].drop(columns=['Rk']).set_index('Tm')
-    rush_d = dfs[5].drop(columns=['Rk']).set_index('Tm')
-    air_yards = dfs[6]
+    team_o = dfs[2]
+    team_o.columns = team_o.columns.droplevel()
+    team_o = team_o.drop(columns=['Rk']).set_index('Tm')
+    team_d = dfs[3]
+    team_d.columns = team_d.columns.droplevel()
+    team_d = team_d.drop(columns=['Rk']).set_index('Tm')
+    pass_o = dfs[4].drop(columns=['Rk']).set_index('Tm') 
+    pass_d = dfs[5].drop(columns=['Rk']).set_index('Tm')
+    rush_o = dfs[6].drop(columns=['Rk']).set_index('Tm')
+    rush_d = dfs[7].drop(columns=['Rk']).set_index('Tm')
+    air_yards = dfs[8]
     air_yards.columns = air_yards.columns.droplevel()
     air_yards = air_yards.set_index('Tm')
-    accuracy = dfs[7]
+    accuracy = dfs[9]
     accuracy.columns = accuracy.columns.droplevel()
     accuracy = accuracy.set_index('Tm')
-    pressure = dfs[8]
+    pressure = dfs[10]
     pressure.columns = pressure.columns.droplevel()
     pressure = pressure.set_index('Tm')
-    rush_adv = dfs[9].set_index('Tm')
-    rec_adv = dfs[10].set_index('Tm')
+    rush_adv = dfs[11].set_index('Tm')
+    rec_adv = dfs[12].set_index('Tm')
+    def_adv = dfs[13].set_index('Tm')
 
     # concat standings and sort
-    # standings do not automatically have ties - need to account for this for future seasons
-    # for now, manually added column for 2023
     stnd = ex.build_stnd(afc, nfc).set_index('Tm')
     
-
     # populate Postgres
     dfs = [stnd, pass_o, pass_d, rush_o, rush_d, air_yards, accuracy, pressure, rush_adv, rec_adv]
+
+    # create tie column if there were none that year
     if 'T' not in stnd:
         stnd['T'] = 0
   
