@@ -252,5 +252,4 @@ ON
 	stnd."Tm" = rush_d."Tm"
 ORDER BY 
     year DESC, 
-	win DESC,
-	tie DESC
+	team ASC

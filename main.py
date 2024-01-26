@@ -100,10 +100,13 @@ def main():
     # standings do not automatically have ties - need to account for this for future seasons
     # for now, manually added column for 2023
     stnd = ex.build_stnd(afc, nfc).set_index('Tm')
+    
 
     # populate Postgres
     dfs = [stnd, pass_o, pass_d, rush_o, rush_d, air_yards, accuracy, pressure, rush_adv, rec_adv]
-
+    if 'T' not in stnd:
+        stnd['T'] = 0
+  
     # setup connections to postgres DB
     try:
         conn_string = 'postgresql://moose:moose@127.0.0.1/nfletl_dev'
