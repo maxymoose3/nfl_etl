@@ -90,9 +90,17 @@ def main():
     nfc = dfs[1]
     team_o = dfs[2]
     team_o.columns = team_o.columns.droplevel()
+    # rename ambiguous column names due to droplevel()
+    team_o.columns = ['Rk', 'Tm', 'G', 'PF', 'Yds', 'Ply', 'Y/P', 'TO', 'FL', '1stD', 'Cmp',
+       'P_Att', 'P_Yds', 'P_TD', 'Int', 'NY/A', 'P_1stD', 'R_Att', 'R_Yds', 'R_TD', 'Y/A',
+       'R_1stD', 'Pen', 'Pen_Yds', '1stPy', 'Sc%', 'TO%', 'EXP']
     team_o = team_o.drop(columns=['Rk']).set_index('Tm')
     team_d = dfs[3]
     team_d.columns = team_d.columns.droplevel()
+    # rename ambiguous column names due to droplevel()
+    team_d.columns = ['Rk', 'Tm', 'G', 'PA', 'Yds', 'Ply', 'Y/P', 'TO', 'FL', '1stD', 'Cmp',
+       'P_Att', 'P_Yds', 'P_TD', 'Int', 'NY/A', 'P_1stD', 'R_Att', 'R_Yds', 'R_TD', 'Y/A',
+       'R_1stD', 'Pen', 'Pen_Yds', '1stPy', 'Sc%', 'TO%', 'EXP']
     team_d = team_d.drop(columns=['Rk']).set_index('Tm')
     pass_o = dfs[4].drop(columns=['Rk']).set_index('Tm') 
     pass_d = dfs[5].drop(columns=['Rk']).set_index('Tm')
@@ -121,6 +129,7 @@ def main():
     if 'T' not in stnd:
         stnd['T'] = 0
   
+    
     # setup connections to postgres DB
     try:
         conn_string = 'postgresql://moose:moose@127.0.0.1/nfletl_dev'
