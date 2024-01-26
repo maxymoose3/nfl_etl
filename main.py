@@ -23,6 +23,8 @@ def main():
 
     df_names = [
         'nfl_standings_{year}'.format(year=YEAR),
+        'team_off_{year}'.format(year=YEAR),
+        'team_def_{year}'.format(year=YEAR),
         'pass_off_{year}'.format(year=YEAR), 
         'pass_def_{year}'.format(year=YEAR), 
         'rush_off_{year}'.format(year=YEAR), 
@@ -31,7 +33,8 @@ def main():
         'accuracy_{year}'.format(year=YEAR),
         'pressure_{year}'.format(year=YEAR),
         'rush_off_adv_{year}'.format(year=YEAR), 
-        'rec_off_adv_{year}'.format(year=YEAR)
+        'rec_off_adv_{year}'.format(year=YEAR),
+        'def_adv_{year}'.format(year=YEAR)
     ]
 
     # print('running extraction script for {year} NFL season...'.format(year=YEAR))
@@ -87,9 +90,17 @@ def main():
     nfc = dfs[1]
     team_o = dfs[2]
     team_o.columns = team_o.columns.droplevel()
+    # rename ambiguous column names due to droplevel()
+    team_o.columns = ['Rk', 'Tm', 'G', 'PF', 'Yds', 'Ply', 'Y/P', 'TO', 'FL', '1stD', 'Cmp',
+       'P_Att', 'P_Yds', 'P_TD', 'Int', 'NY/A', 'P_1stD', 'R_Att', 'R_Yds', 'R_TD', 'Y/A',
+       'R_1stD', 'Pen', 'Pen_Yds', '1stPy', 'Sc%', 'TO%', 'EXP']
     team_o = team_o.drop(columns=['Rk']).set_index('Tm')
     team_d = dfs[3]
     team_d.columns = team_d.columns.droplevel()
+    # rename ambiguous column names due to droplevel()
+    team_d.columns = ['Rk', 'Tm', 'G', 'PA', 'Yds', 'Ply', 'Y/P', 'TO', 'FL', '1stD', 'Cmp',
+       'P_Att', 'P_Yds', 'P_TD', 'Int', 'NY/A', 'P_1stD', 'R_Att', 'R_Yds', 'R_TD', 'Y/A',
+       'R_1stD', 'Pen', 'Pen_Yds', '1stPy', 'Sc%', 'TO%', 'EXP']
     team_d = team_d.drop(columns=['Rk']).set_index('Tm')
     pass_o = dfs[4].drop(columns=['Rk']).set_index('Tm') 
     pass_d = dfs[5].drop(columns=['Rk']).set_index('Tm')
@@ -112,12 +123,13 @@ def main():
     stnd = ex.build_stnd(afc, nfc).set_index('Tm')
     
     # populate Postgres
-    dfs = [stnd, pass_o, pass_d, rush_o, rush_d, air_yards, accuracy, pressure, rush_adv, rec_adv]
+    dfs = [stnd, team_o, team_d, pass_o, pass_d, rush_o, rush_d, air_yards, accuracy, pressure, rush_adv, rec_adv, def_adv]
 
     # create tie column if there were none that year
     if 'T' not in stnd:
         stnd['T'] = 0
   
+    
     # setup connections to postgres DB
     try:
         conn_string = 'postgresql://moose:moose@127.0.0.1/nfletl_dev'
