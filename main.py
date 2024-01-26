@@ -23,6 +23,8 @@ def main():
 
     df_names = [
         'nfl_standings_{year}'.format(year=YEAR),
+        'team_off_{year}'.format(year=YEAR),
+        'team_def_{year}'.format(year=YEAR),
         'pass_off_{year}'.format(year=YEAR), 
         'pass_def_{year}'.format(year=YEAR), 
         'rush_off_{year}'.format(year=YEAR), 
@@ -31,7 +33,8 @@ def main():
         'accuracy_{year}'.format(year=YEAR),
         'pressure_{year}'.format(year=YEAR),
         'rush_off_adv_{year}'.format(year=YEAR), 
-        'rec_off_adv_{year}'.format(year=YEAR)
+        'rec_off_adv_{year}'.format(year=YEAR),
+        'def_adv_{year}'.format(year=YEAR)
     ]
 
     # print('running extraction script for {year} NFL season...'.format(year=YEAR))
@@ -112,7 +115,7 @@ def main():
     stnd = ex.build_stnd(afc, nfc).set_index('Tm')
     
     # populate Postgres
-    dfs = [stnd, pass_o, pass_d, rush_o, rush_d, air_yards, accuracy, pressure, rush_adv, rec_adv]
+    dfs = [stnd, team_o, team_d, pass_o, pass_d, rush_o, rush_d, air_yards, accuracy, pressure, rush_adv, rec_adv, def_adv]
 
     # create tie column if there were none that year
     if 'T' not in stnd:
