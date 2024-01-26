@@ -29,6 +29,7 @@ class Extract():
 
         return soups    
 
+    # extracts the div wrapped in comments
     def decomment(self, div):
         try:
             cleaned = div.find(string=lambda text: isinstance(text, Comment))
@@ -36,7 +37,7 @@ class Extract():
         except:
             return div
         
-
+    # iterates corresponding offense/defense divs with same ID
     def iter_divs(self, inds, divs):
         div = []
         for i, d in enumerate(divs):
