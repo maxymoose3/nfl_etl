@@ -12,12 +12,12 @@ from dotenv import load_dotenv
 import os
 
 def main():
-    # Load environment variables from .env
-    load_dotenv()
-
     # parse command line arguments
     if len(sys.argv) != 2:
         raise Exception('Unexpected number of arguments, please review command. Terminating')
+        
+    # Load environment variables from .env
+    load_dotenv()
 
     YEAR = sys.argv[1]
 
