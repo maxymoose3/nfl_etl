@@ -13,5 +13,6 @@ Data Modelling:	As dbt (data build tool) has become the industry standard for bu
 Virtualization:	Docker is used for establishing connections between Python and PostgreSQL, and will have further usage for other DevOps purposes later on
 
 Code
-nfl_etl/main.py: web scraping script to ingest data from https://www.pro-football-reference.com/ into PostgreSQL
-nfl_etl/extract.py:	helper class for main.py
+nfl_etl/main.py: web scraping script to ingest data from https://www.pro-football-reference.com/ into PostgreSQL \n
+nfl_etl/extract.py:	helper class for main.py \n
+nfl_etl/predict_season.py: linear regression algorithm (using scikit learn)
