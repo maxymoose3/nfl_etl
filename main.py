@@ -12,30 +12,41 @@ from dotenv import load_dotenv
 import os
 
 def main():
-    # Load environment variables from .env
-    load_dotenv()
-
     # parse command line arguments
     if len(sys.argv) != 2:
         raise Exception('Unexpected number of arguments, please review command. Terminating')
+        
+    # Load environment variables from .env
+    load_dotenv()
 
-    YEAR = sys.argv[1]
+    YEAR = int(sys.argv[1])
 
-    df_names = [
-        'nfl_standings_{year}'.format(year=YEAR),
-        'team_off_{year}'.format(year=YEAR),
-        'team_def_{year}'.format(year=YEAR),
-        'pass_off_{year}'.format(year=YEAR), 
-        'pass_def_{year}'.format(year=YEAR), 
-        'rush_off_{year}'.format(year=YEAR), 
-        'rush_def_{year}'.format(year=YEAR),
-        'air_yards_{year}'.format(year=YEAR), 
-        'accuracy_{year}'.format(year=YEAR),
-        'pressure_{year}'.format(year=YEAR),
-        'rush_off_adv_{year}'.format(year=YEAR), 
-        'rec_off_adv_{year}'.format(year=YEAR),
-        'def_adv_{year}'.format(year=YEAR)
-    ]
+    if YEAR > 2017:
+        df_names = [
+            'nfl_standings_{year}'.format(year=YEAR),
+            'team_off_{year}'.format(year=YEAR),
+            'team_def_{year}'.format(year=YEAR),
+            'pass_off_{year}'.format(year=YEAR), 
+            'pass_def_{year}'.format(year=YEAR), 
+            'rush_off_{year}'.format(year=YEAR), 
+            'rush_def_{year}'.format(year=YEAR),
+            'air_yards_{year}'.format(year=YEAR), 
+            'accuracy_{year}'.format(year=YEAR),
+            'pressure_{year}'.format(year=YEAR),
+            'rush_off_adv_{year}'.format(year=YEAR), 
+            'rec_off_adv_{year}'.format(year=YEAR),
+            'def_adv_{year}'.format(year=YEAR)
+        ]
+    else:
+        df_names = [
+            'nfl_standings_{year}'.format(year=YEAR),
+            'team_off_{year}'.format(year=YEAR),
+            'team_def_{year}'.format(year=YEAR),
+            'pass_off_{year}'.format(year=YEAR), 
+            'pass_def_{year}'.format(year=YEAR), 
+            'rush_off_{year}'.format(year=YEAR), 
+            'rush_def_{year}'.format(year=YEAR),
+        ]
 
     # print('running extraction script for {year} NFL season...'.format(year=YEAR))
 
@@ -44,8 +55,11 @@ def main():
     url_o_adv = 'https://www.pro-football-reference.com/years/{year}/advanced.htm'.format(year=YEAR)
     url_d = 'https://www.pro-football-reference.com/years/{year}/opp.htm'.format(year=YEAR)
     url_stnd = 'https://www.pro-football-reference.com/years/{year}/'.format(year=YEAR)
-    urls = [url_o, url_o_adv, url_d, url_stnd]
-
+    
+    if YEAR > 2017:
+        urls = [url_o, url_o_adv, url_d, url_stnd]
+    else:
+        urls = [url_o, url_d, url_stnd]
     ex = Extract()
 
     resps = Extract.response(urls)
@@ -62,25 +76,35 @@ def main():
     divs_team = [div.find('div', {'id': 'all_team_stats'}) for div in soups]
     divs_pass = [div.find('div', {'id': 'all_passing'}) for div in soups]
     divs_rush = [div.find('div', {'id': 'all_rushing'}) for div in soups]
-    divs_pass_o_adv = [div.select('#div_air_yards, #div_accuracy, #div_pressure, #div_play_type') for div in soups]     # used selector as this is a tabbed table, as opposed to above
-    rush_adv = [div.find('div', {'id': 'all_advanced_rushing'}) for div in soups][1]
-    rec_adv = [div.find('div', {'id': 'all_advanced_receiving'}) for div in soups][1]
-    def_adv = [div.find('div', {'id': 'all_advanced_defense'}) for div in soups][2]
     
-    team_o = ex.decomment(divs_team[0])
-    team_d = divs_team[2]                               # this div was not wrapped in comments so bypassed iter_divs(). for the above div, just went straight to decomment()
+    if YEAR > 2017:
+        divs_pass_o_adv = [div.select('#div_air_yards, #div_accuracy, #div_pressure, #div_play_type') for div in soups]     # used selector as this is a tabbed table, as opposed to above
+        rush_adv = [div.find('div', {'id': 'all_advanced_rushing'}) for div in soups][1]
+        rec_adv = [div.find('div', {'id': 'all_advanced_receiving'}) for div in soups][1]
+        def_adv = [div.find('div', {'id': 'all_advanced_defense'}) for div in soups][2]
+    
+    if YEAR <= 2017:
+        team_o, team_d = ex.iter_divs([0, 2], divs_team)     # this div was not wrapped in comments after 2017 so bypassed iter_divs(). for the above div, just went straight to decomment()
+    else:
+        team_o = ex.decomment(divs_team[0])
+        team_d = divs_team[2]
+
     pass_o, pass_d = ex.iter_divs([0, 2], divs_pass)
     rush_o, rush_d = ex.iter_divs([0, 2], divs_rush)
 
-    pass_o_adv = ex.iter_divs([1], divs_pass_o_adv)[0]
-
-    air_yards =  pass_o_adv[0]
-    accuracy =  pass_o_adv[1]
-    pressure =  pass_o_adv[2]
+    if YEAR > 2017:
+        pass_o_adv = ex.iter_divs([1], divs_pass_o_adv)[0]
+        air_yards =  pass_o_adv[0]
+        accuracy =  pass_o_adv[1]
+        pressure =  pass_o_adv[2]
     
     # loop through all divs and create df to correspond
-    dfs = [afc, nfc, team_o, team_d, pass_o, pass_d, rush_o, rush_d, air_yards, accuracy, pressure, rush_adv, rec_adv, def_adv]
-
+    if YEAR > 2017:
+        dfs = [afc, nfc, team_o, team_d, pass_o, pass_d, rush_o, rush_d, air_yards, accuracy, pressure, rush_adv, rec_adv, def_adv]
+    else:
+        dfs = [afc, nfc, team_o, team_d, pass_o, pass_d, rush_o, rush_d]
+    
+    
     for i in range(len(dfs)):
         dfs[i] = pd.read_html(dfs[i].encode('utf-8'), flavor='html5lib')[0]
 
@@ -106,24 +130,31 @@ def main():
     pass_d = dfs[5].drop(columns=['Rk']).set_index('Tm')
     rush_o = dfs[6].drop(columns=['Rk']).set_index('Tm')
     rush_d = dfs[7].drop(columns=['Rk']).set_index('Tm')
-    air_yards = dfs[8]
-    air_yards.columns = air_yards.columns.droplevel()
-    air_yards = air_yards.set_index('Tm')
-    accuracy = dfs[9]
-    accuracy.columns = accuracy.columns.droplevel()
-    accuracy = accuracy.set_index('Tm')
-    pressure = dfs[10]
-    pressure.columns = pressure.columns.droplevel()
-    pressure = pressure.set_index('Tm')
-    rush_adv = dfs[11].set_index('Tm')
-    rec_adv = dfs[12].set_index('Tm')
-    def_adv = dfs[13].set_index('Tm')
+    
+    if YEAR > 2017:
+        air_yards = dfs[8]
+        air_yards.columns = air_yards.columns.droplevel()
+        air_yards = air_yards.set_index('Tm')
+        accuracy = dfs[9]
+        accuracy.columns = accuracy.columns.droplevel()
+        accuracy = accuracy.set_index('Tm')
+        pressure = dfs[10]
+        pressure.columns = pressure.columns.droplevel()
+        pressure = pressure.set_index('Tm')
+        rush_adv = dfs[11].set_index('Tm')
+        rec_adv = dfs[12].set_index('Tm')
+        def_adv = dfs[13].set_index('Tm')
+
+    
 
     # concat standings and sort
     stnd = ex.build_stnd(afc, nfc).set_index('Tm')
     
     # populate Postgres
-    dfs = [stnd, team_o, team_d, pass_o, pass_d, rush_o, rush_d, air_yards, accuracy, pressure, rush_adv, rec_adv, def_adv]
+    if YEAR > 2017:
+        dfs = [stnd, team_o, team_d, pass_o, pass_d, rush_o, rush_d, air_yards, accuracy, pressure, rush_adv, rec_adv, def_adv]
+    else:
+        dfs = [stnd, team_o, team_d, pass_o, pass_d, rush_o, rush_d]
 
     # create tie column if there were none that year
     if 'T' not in stnd:
