@@ -1,5 +1,4 @@
 NFL ETL Pipeline Project
-Max Munits
 
 This passion project is very much a work in progress. The initial purpose of this is not to have accurate models predicting the upcoming NFL season, but rather to showcase my knowledge of data architecture and ETL pipeline construction. As the groundwork is laid with implementation of CI/CD and ETL best practices, I will begin to hone in more on developing meaningful and insightful analyses and visualizations.
 
